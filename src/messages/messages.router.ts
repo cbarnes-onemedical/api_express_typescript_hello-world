@@ -5,6 +5,7 @@ import {
   getProtectedMessage,
   getPublicMessage,
 } from "./messages.service";
+import { expressjwt as jwt } from "express-jwt";
 
 export const messagesRouter = express.Router();
 
@@ -25,3 +26,23 @@ messagesRouter.get("/admin", validateAccessToken, (req, res) => {
 
   res.status(200).json(message);
 });
+
+messagesRouter.get(
+  "/scopes", 
+  jwt({ 
+    secret: process.env.SESSION_TOKEN_SECRET ?? "unknown", 
+    algorithms: ["HS256"],
+    getToken: (req: express.Request) => {
+      let token: string = '';
+
+      if (req.query && req.query.session_token) {
+        token = req.query.session_token as string;
+      }
+
+      return token;
+    }
+  }),
+  (req, res) => {
+    res.status(200).json(req.auth);
+  }
+);
